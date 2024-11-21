@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮件创建成功 - 时光邮局</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .success-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .success-icon {
+            font-size: 48px;
+            color: #4CAF50;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        p {
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .status-link {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 5px;
+            text-decoration: none;
+            display: inline-block;
+            margin-top: 20px;
+            transition: background-color 0.3s;
+        }
+
+        .status-link:hover {
+            background-color: #45a049;
+        }
+
+        .mail-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 20px 0;
+        }
+
+        .verification-section {
+            margin-top: 20px;
+            padding: 20px;
+            background-color: #fff3e0;
+            border-radius: 5px;
+        }
+
+        #verificationForm {
+            margin-top: 15px;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 150px;
+            margin-right: 10px;
+        }
+
+        button {
+            background-color: #2196F3;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #1976D2;
+        }
+
+        .home-link {
+            color: #666;
+            text-decoration: none;
+            margin-top: 20px;
+            display: inline-block;
+        }
+
+        .home-link:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="success-container">
+        <div class="success-icon">✉️</div>
+        <h1>邮件创建成功！</h1>
+        <div class="mail-info">
+            <p>您的邮件已经成功创建，但还需要验证您的邮箱。</p>
+            <p>我们已向您的邮箱发送了验证码，请查收并在下方输入。</p>
+        </div>
+
+        <div class="verification-section">
+            <p>请输入邮箱验证码：</p>
+            <form id="verificationForm">
+                <input type="text" id="verificationCode" placeholder="输入验证码" required>
+                <button type="submit">验证</button>
+            </form>
+        </div>
+
+        <p>验证成功后，我们会在指定时间将邮件发送给您。</p>
+        <a href="#" id="statusLink" class="status-link">查看邮件状态</a>
+        <br>
+        <a href="/" class="home-link">返回首页</a>
+    </div>
+
+    <script>
+        // 从 URL 获取参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const mailId = urlParams.get('mailId');
+        const securityCode = urlParams.get('securityCode');
+
+        // 设置状态查询链接
+        const statusLink = document.getElementById('statusLink');
+        statusLink.href = `/status.html?mailId=${mailId}&securityCode=${securityCode}`;
+
+        // 处理验证表单提交
+        document.getElementById('verificationForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const verificationCode = document.getElementById('verificationCode').value;
+
+            try {
+                const response = await fetch('/api/verify-mail', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        mailId,
+                        verificationCode
+                    })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert('验证成功！邮件将在指定时间发送。');
+                    window.location.href = `/status.html?mailId=${mailId}&securityCode=${securityCode}`;
+                } else {
+                    alert('验证失败：' + (data.error || '验证码错误'));
+                }
+            } catch (error) {
+                alert('验证过程中发生错误，请重试');
+            }
+        });
+    </script>
+</body>
+</html>

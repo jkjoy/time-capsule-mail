@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>邮件状态 - 时光邮局</title>
+    <style>
+        body {
+            font-family: 'Microsoft YaHei', sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .status-container {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .mail-info {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+
+        .mail-info p {
+            margin: 10px 0;
+            color: #666;
+        }
+
+        .status-timeline {
+            margin-top: 20px;
+        }
+
+        .timeline-item {
+            padding: 10px;
+            border-left: 2px solid #4CAF50;
+            margin-left: 20px;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            width: 12px;
+            height: 12px;
+            background-color: #4CAF50;
+            border-radius: 50%;
+            position: absolute;
+            left: -7px;
+            top: 14px;
+        }
+
+        .timeline-item .time {
+            color: #999;
+            font-size: 0.9em;
+        }
+
+        .timeline-item .status {
+            margin: 5px 0;
+            color: #333;
+        }
+
+        .home-link {
+            color: #666;
+            text-decoration: none;
+            margin-top: 20px;
+            display: block;
+            text-align: center;
+        }
+
+        .home-link:hover {
+            color: #333;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.9em;
+            margin-left: 10px;
+        }
+
+        .status-pending {
+            background-color: #FFF3E0;
+            color: #E65100;
+        }
+
+        .status-verified {
+            background-color: #E8F5E9;
+            color: #2E7D32;
+        }
+
+        .status-sent {
+            background-color: #E3F2FD;
+            color: #1565C0;
+        }
+    </style>
+</head>
+<body>
+    <div class="status-container">
+        <h1>邮件状态</h1>
+        <div class="mail-info">
+            <p id="emailInfo">收件邮箱：加载中...</p>
+            <p id="sendTimeInfo">发送时间：加载中...</p>
+            <p id="statusInfo">当前状态：加载中...</p>
+        </div>
+
+        <div class="status-timeline" id="timeline">
+            <!-- 时间线内容将通过 JavaScript 动态添加 -->
+        </div>
+
+        <a href="/" class="home-link">返回首页</a>
+    </div>
+
+    <script>
+        // 格式化时间的函数
+        function formatDate(dateString) {
+            const date = new Date(dateString);
+            return date.toLocaleString('zh-CN', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        // 获取状态标签
+        function getStatusBadge(status) {
+            let className = '';
+            let text = '';
+            
+            switch(status) {
+                case 'PENDING':
+                    className = 'status-pending';
+                    text = '等待验证';
+                    break;
+                case 'VERIFIED':
+                    className = 'status-verified';
+                    text = '已验证';
+                    break;
+                case 'SENT':
+                    className = 'status-sent';
+                    text = '已发送';
+                    break;
+                default:
+                    className = 'status-pending';
+                    text = status;
+            }
+
+            return `<span class="status-badge ${className}">${text}</span>`;
+        }
+
+        // 从 URL 获取参数
+        const urlParams = new URLSearchParams(window.location.search);
+        const mailId = urlParams.get('mailId');
+        const securityCode = urlParams.get('securityCode');
+
+        // 获取邮件状态
+        async function fetchMailStatus() {
+            try {
+                const response = await fetch(`/api/mail-status/${mailId}/${securityCode}`);
+                const data = await response.json();
+
+                if (data.mail) {
+                    // 更新邮件信息
+                    document.getElementById('emailInfo').textContent = `收件邮箱：${data.mail.email}`;
+                    document.getElementById('sendTimeInfo').textContent = `发送时间：${formatDate(data.mail.send_time)}`;
+                    
+                    let status = '待发送';
+                    if (data.mail.is_sent) status = '已发送';
+                    else if (data.mail.is_verified) status = '已验证';
+                    else status = '等待验证';
+                    
+                    document.getElementById('statusInfo').textContent = `当前状态：${status}`;
+
+                    // 更新时间线
+                    const timeline = document.getElementById('timeline');
+                    timeline.innerHTML = ''; // 清空现有内容
+
+                    if (data.logs && data.logs.length > 0) {
+                        data.logs.forEach(log => {
+                            const timelineItem = document.createElement('div');
+                            timelineItem.className = 'timeline-item';
+                            timelineItem.innerHTML = `
+                                <div class="time">${formatDate(log.created_at)}</div>
+                                <div class="status">${log.message} ${getStatusBadge(log.status)}</div>
+                            `;
+                            timeline.appendChild(timelineItem);
+                        });
+                    } else {
+                        timeline.innerHTML = '<p style="text-align: center; color: #666;">暂无状态记录</p>';
+                    }
+                }
+            } catch (error) {
+                console.error('获取状态失败:', error);
+                alert('获取邮件状态失败，请重试');
+            }
+        }
+
+        // 页面加载时获取状态
+        fetchMailStatus();
+    </script>
+</body>
+</html>

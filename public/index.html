@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>时光邮件 - 写给未来的信</title>
+    <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #f5f5f5;
+            --text-color: #333;
+            --border-radius: 8px;
+            --box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 30px;
+            margin-bottom: 20px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #666;
+        }
+
+        input, textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #ddd;
+            border-radius: var(--border-radius);
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input:focus, textarea:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        textarea {
+            height: 150px;
+            resize: vertical;
+        }
+
+        button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: transform 0.2s ease, background-color 0.2s ease;
+            width: 100%;
+        }
+
+        button:hover {
+            background-color: #357abd;
+            transform: translateY(-2px);
+        }
+
+        .tab-container {
+            display: flex;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #fff;
+            border: none;
+            flex: 1;
+            text-align: center;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: var(--primary-color);
+            color: white;
+            border-radius: var(--border-radius);
+        }
+
+        .form-section {
+            display: none;
+        }
+
+        .form-section.active {
+            display: block;
+        }
+
+        .status {
+            background: white;
+            padding: 20px;
+            border-radius: var(--border-radius);
+            margin-top: 20px;
+        }
+
+        .logs {
+            margin-top: 15px;
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            background: var(--secondary-color);
+            border-radius: var(--border-radius);
+        }
+
+        .log-entry {
+            padding: 10px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        .log-entry:last-child {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+        }
+
+        .status-verified {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .status-pending {
+            background: #fff3e0;
+            color: #f57c00;
+        }
+
+        .status-sent {
+            background: #e8f5e9;
+            color: #388e3c;
+        }
+
+        .status-cancelled {
+            background: #fce4ec;
+            color: #d81b60;
+        }
+
+        @media (max-width: 600px) {
+            .container {
+                padding: 10px;
+            }
+
+            .card {
+                padding: 20px;
+            }
+
+            h1 {
+                font-size: 2em;
+            }
+        }
+            /* 添加新的样式 */
+            .loading {
+            position: relative;
+            pointer-events: none;
+            opacity: 0.7;
+        }
+
+        .loading::after {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 20px;
+            height: 20px;
+            margin: -10px 0 0 -10px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .error-input {
+            border-color: #dc3545;
+        }
+
+        .error-message {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }    
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✉️ 时光邮件</h1>
+        
+        <div class="tab-container card">
+            <button class="tab active" onclick="switchTab('write')">写信</button>
+            <button class="tab" onclick="switchTab('status')">查询状态</button>
+        </div>
+
+        <div id="writeSection" class="form-section active card">
+            <form id="futureMailForm">
+                <div class="form-group">
+                    <label for="email">📧 收件邮箱</label>
+                    <input type="email" id="email" required placeholder="请输入接收邮件的地址">
+                </div>
+                <div class="form-group">
+                    <label for="message">✏️ 想说的话</label>
+                    <textarea id="message" required placeholder="写下你想对未来说的话..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="sendTime">🕒 发送时间</label>
+                    <input type="datetime-local" id="sendTime" required>
+                </div>
+                <button type="submit">寄出时光邮件</button>
+            </form>
+        </div>
+
+        <div id="verificationForm" class="form-section card" style="display: none;">
+            <h3>📮 请输入验证码</h3>
+            <p style="margin: 10px 0;">验证码已发送到您的邮箱，请查收并输入</p>
+            <div class="form-group">
+                <input type="text" id="verificationCode" placeholder="请输入验证码">
+            </div>
+            <button onclick="verifyEmail()">验证邮箱</button>
+        </div>
+
+        <div id="statusSection" class="form-section card">
+            <h3>🔍 查询状态</h3>
+            <div class="form-group">
+                <input type="text" id="mailId" placeholder="邮件ID">
+            </div>
+            <div class="form-group">
+                <input type="text" id="securityCode" placeholder="安全码">
+            </div>
+            <div class="button-group" style="display: flex; gap: 10px;">
+                <button onclick="checkStatus()" style="flex: 1;">查询</button>
+                <button onclick="cancelMail()" style="flex: 1; background-color: #dc3545;">取消发送</button>
+            </div>
+        
+            <div id="statusDisplay" class="status" style="display: none;">
+                <div id="mailStatus"></div>
+                <div id="logs" class="logs"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 设置最小可选择时间为当前时间
+        function setMinDateTime() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            
+            const minDateTime = `${year}-${month}-${day}T${hours}:${minutes}`;
+            document.getElementById('sendTime').min = minDateTime;
+        }
+
+        // 页面加载时设置最小时间
+        document.addEventListener('DOMContentLoaded', setMinDateTime);
+
+        function showLoading(element) {
+            element.classList.add('loading');
+        }
+
+        function hideLoading(element) {
+            element.classList.remove('loading');
+        }
+
+        function showError(element, message) {
+            element.classList.add('error-input');
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            element.parentNode.appendChild(errorDiv);
+        }
+
+        function clearError(element) {
+            element.classList.remove('error-input');
+            const errorMessage = element.parentNode.querySelector('.error-message');
+            if (errorMessage) {
+                errorMessage.remove();
+            }
+        }
+
+        document.getElementById('futureMailForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    
+    const form = e.target;
+    const submitButton = form.querySelector('button[type="submit"]');
+    
+    // 获取表单数据
+    const email = document.getElementById('email').value;
+    const message = document.getElementById('message').value;
+    
+    // 检查邮件内容是否为空
+    if (!message.trim()) {
+        showError(document.getElementById('message'), '邮件内容不能为空');
+        return;
+    }
+    
+    const sendTime = document.getElementById('sendTime').value;
+    
+    // 验证时间
+    const selectedTime = new Date(sendTime);
+    if (selectedTime <= new Date()) {
+        showError(document.getElementById('sendTime'), '发送时间必须是未来时间');
+        return;
+    }
+
+    // 获取用户时区
+    const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+
+    try {
+        showLoading(submitButton);
+        
+        const response = await fetch('/api/future-mail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                email,
+                content: message,
+                sendTime,
+                timezone
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            currentMailId = data.mailId;
+            currentSecurityCode = data.securityCode;
+            
+            document.getElementById('verificationForm').style.display = 'block';
+            document.getElementById('writeSection').classList.remove('active');
+        } else {
+            alert('发送失败：' + (data.error || '未知错误'));
+        }
+    } catch (error) {
+        alert('发送过程中发生错误，请重试');
+    } finally {
+        hideLoading(submitButton);
+    }
+});
+//取消邮件
+async function cancelMail() {
+    const mailId = document.getElementById('mailId').value;
+    const securityCode = document.getElementById('securityCode').value;
+
+    if (!mailId || !securityCode) {
+        alert('请输入邮件ID和安全码');
+        return;
+    }
+
+    try {
+        const response = await fetch('/api/cancel-mail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                mailId,
+                securityCode
+            })
+        });
+
+        const data = await response.json();
+        
+        if (response.ok) {
+            alert('🚫 邮件发送已成功取消');
+            // 可以刷新状态显示
+            checkStatus();
+        } else {
+            alert(data.error);
+        }
+    } catch (error) {
+        alert('取消失败：' + error.message);
+    }
+}
+
+        function switchTab(tab) {
+            // 隐藏所有section
+            document.querySelectorAll('.form-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // 取消所有tab的active状态
+            document.querySelectorAll('.tab').forEach(t => {
+                t.classList.remove('active');
+            });
+
+            // 激活选中的tab和section
+            if (tab === 'write') {
+                document.getElementById('writeSection').classList.add('active');
+            } else {
+                document.getElementById('statusSection').classList.add('active');
+            }
+            event.target.classList.add('active');
+        }
+
+        let currentMailId = null;
+        let currentSecurityCode = null;
+
+        async function verifyEmail() {
+    const verificationCode = document.getElementById('verificationCode').value;
+    const verificationButton = event.target;
+    
+    try {
+        // 添加加载状态
+        showLoading(verificationButton);
+        
+        const response = await fetch('/api/verify-mail', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                mailId: currentMailId,
+                verificationCode: verificationCode
+            })
+        });
+
+        const data = await response.json();
+        if (response.ok) {
+            // 创建一个模态框来显示安全码和邮件ID
+            const modalHtml = `
+                <div id="securityCodeModal" style="
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0,0,0,0.5);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 1000;
+                ">
+                    <div style="
+                        background: white;
+                        padding: 30px;
+                        border-radius: 10px;
+                        text-align: center;
+                        max-width: 400px;
+                        width: 90%;
+                    ">
+                        <h2>🎉 验证成功！</h2>
+                        <p>请保存以下信息，用于查询邮件状态：</p>
+                        <div style="
+                            background: #f0f0f0;
+                            padding: 15px;
+                            border-radius: 5px;
+                            margin: 15px 0;
+                        ">
+                            <strong>邮件ID:</strong> 
+                            <span id="displayMailId">${currentMailId}</span>
+                            <button onclick="copyToClipboard('displayMailId')" style="
+                                margin-left: 10px;
+                                background: #4a90e2;
+                                color: white;
+                                border: none;
+                                padding: 5px 10px;
+                                border-radius: 5px;
+                            ">复制</button>
+                        </div>
+                        <div style="
+                            background: #f0f0f0;
+                            padding: 15px;
+                            border-radius: 5px;
+                            margin: 15px 0;
+                        ">
+                            <strong>安全码:</strong> 
+                            <span id="displaySecurityCode">${data.securityCode}</span>
+                            <button onclick="copyToClipboard('displaySecurityCode')" style="
+                                margin-left: 10px;
+                                background: #4a90e2;
+                                color: white;
+                                border: none;
+                                padding: 5px 10px;
+                                border-radius: 5px;
+                            ">复制</button>
+                        </div>
+                        <button onclick="closeSecurityCodeModal()" style="
+                            background: #4a90e2;
+                            color: white;
+                            border: none;
+                            padding: 10px 20px;
+                            border-radius: 5px;
+                            margin-top: 15px;
+                        ">确定</button>
+                    </div>
+                </div>
+            `;
+
+            // 将模态框添加到body
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            
+            // 隐藏验证表单
+            document.getElementById('verificationForm').style.display = 'none';
+            document.getElementById('writeSection').classList.add('active');
+            document.getElementById('futureMailForm').reset();
+        } else {
+            alert(data.error);
+        }
+    } catch (error) {
+        alert('验证失败：' + error.message);
+    } finally {
+        // 移除加载状态
+        hideLoading(verificationButton);
+    }
+}
+
+// 复制到剪贴板的函数
+function copyToClipboard(elementId) {
+    const copyText = document.getElementById(elementId);
+    const textArea = document.createElement('textarea');
+    textArea.value = copyText.textContent;
+    document.body.appendChild(textArea);
+    textArea.select();
+    document.execCommand('copy');
+    document.body.removeChild(textArea);
+    
+    // 可选：显示复制成功的提示
+    alert('已复制到剪贴板');
+}
+
+// 关闭安全码模态框的函数
+function closeSecurityCodeModal() {
+    const modal = document.getElementById('securityCodeModal');
+    if (modal) {
+        modal.remove();
+    }
+}
+
+        async function checkStatus() {
+            const mailId = document.getElementById('mailId').value;
+            const securityCode = document.getElementById('securityCode').value;
+
+            try {
+                const response = await fetch(`/api/mail-status/${mailId}/${securityCode}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const statusDisplay = document.getElementById('statusDisplay');
+                    const mailStatus = document.getElementById('mailStatus');
+                    const logs = document.getElementById('logs');
+                    
+                    statusDisplay.style.display = 'block';
+                    
+                    const status = getStatusText(data.mail);
+                    const statusClass = getStatusClass(data.mail);
+                    
+                    mailStatus.innerHTML = `
+                        <div class="status-badge ${statusClass}">${status}</div>
+                        <p>📅 计划发送时间: ${new Date(data.mail.send_time).toLocaleString()}</p>
+                        <p>🔄 重试次数: ${data.mail.retry_count}</p>
+                    `;
+
+                    logs.innerHTML = data.logs.map(log => `
+                        <div class="log-entry">
+                            <strong>${new Date(log.created_at).toLocaleString()}</strong>
+                            <p>${log.message}</p>
+                        </div>
+                    `).join('');
+                } else {
+                    alert(data.error);
+                }
+            } catch (error) {
+                alert('查询失败：' + error.message);
+            }
+        }
+
+        function getStatusText(mail) {
+            if (mail.is_cancelled) return '已取消';
+            if (mail.is_sent) return '已发送';
+            if (!mail.is_verified) return '等待验证';
+            return '等待发送';
+        }
+
+        function getStatusClass(mail) {
+            if (mail.is_cancelled) return 'status-cancelled';
+            if (mail.is_sent) return 'status-sent';
+            if (!mail.is_verified) return 'status-pending';
+            return 'status-verified';
+        }
+    </script>
+</body>
+</html>
