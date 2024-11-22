@@ -39,23 +39,51 @@ transporter.verify(function(error, success) {
     }
 });
 
+//全局配置
+const mailConfig = {
+    from: '"时光邮局" <' + process.env.SMTP_USER + '>',
+    templates: {
+        verificationCode: (verificationCode) => ({
+            subject: '时光邮局 - 邮箱验证码',
+            html: `
+                <div style="padding: 20px; background-color: #f5f5f5;">
+                    <h2 style="color: #333;">时光邮局 - 邮箱验证</h2>
+                    <p>您好！</p>
+                    <p>您的验证码是：<strong style="color: #4CAF50; font-size: 20px;">${verificationCode}</strong></p>
+                    <p>验证码有效期为 5 分钟。如果这不是您本人的操作，请忽略此邮件。</p>
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                        <p style="color: #666; font-size: 12px;">这是一封自动发送的邮件，请勿直接回复。</p>
+                    </div>
+                </div>
+            `
+        }),
+        futureMail: (content, sendTime) => ({
+            subject: `时光邮局 - 您的邮件已送达 (${sendTime})`,
+            html: `
+                <div style="padding: 20px; background-color: #f5f5f5;">
+                    <h2 style="color: #333;">时光邮局 - 您有一封来自过去的信</h2>
+                    <p>您好,未来的自己</p>
+                    <div style="background-color: #fff; padding: 20px; border: 1px solid #ddd;">
+                        <p>${content}</p>
+                    </div>
+                    <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
+                        <p style="color: #666; font-size: 12px;">这是一封来自于过去的邮件,委托我们在 ${sendTime} 发送给您,请勿直接回复。</p>
+                    </div>
+                </div>
+            `
+        })
+    }
+};
+
 // 发送验证码邮件的函数
 async function sendVerificationCode(toEmail, verificationCode) {
+    const { subject, html } = mailConfig.templates.verificationCode(verificationCode);
+
     const mailOptions = {
-        from: '"时光邮局" <' + process.env.SMTP_USER + '>',
+        from: mailConfig.from,
         to: toEmail,
-        subject: '时光邮局 - 邮箱验证码',
-        html: `
-            <div style="padding: 20px; background-color: #f5f5f5;">
-                <h2 style="color: #333;">时光邮局 - 邮箱验证</h2>
-                <p>您好！</p>
-                <p>您的验证码是：<strong style="color: #4CAF50; font-size: 20px;">${verificationCode}</strong></p>
-                <p>验证码有效期为 5 分钟。如果这不是您本人的操作，请忽略此邮件。</p>
-                <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-                    <p style="color: #666; font-size: 12px;">这是一封自动发送的邮件，请勿直接回复。</p>
-                </div>
-            </div>
-        `
+        subject,
+        html
     };
 
     try {

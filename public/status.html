@@ -132,7 +132,9 @@
         // 格式化时间的函数
         function formatDate(dateString) {
             const date = new Date(dateString);
+            const userTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
             return date.toLocaleString('zh-CN', {
+                timeZone: userTimezone,
                 year: 'numeric',
                 month: '2-digit',
                 day: '2-digit',
