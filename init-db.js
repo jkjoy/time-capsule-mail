@@ -2,13 +2,8 @@ const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
 
-// 确保数据库目录存在
-const dbDir = path.join(__dirname, 'data');
-if (!fs.existsSync(dbDir)) {
-    fs.mkdirSync(dbDir, { recursive: true });
-}
-
-const dbPath = path.join(dbDir, 'future_mails.db');
+// 从环境变量中读取数据库路径
+const dbPath = process.env.DB_PATH || path.join(__dirname, './data/future_mails.db');
 
 // 创建数据库连接
 const db = new sqlite3.Database(dbPath, (err) => {
@@ -110,4 +105,8 @@ const initDatabase = async () => {
     }
 };
 
+// 确保在使用数据库之前，环境变量已经加载
+require('dotenv').config();
+
+// 执行数据库初始化
 initDatabase();
