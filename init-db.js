@@ -5,6 +5,9 @@ const fs = require('fs');
 // 从环境变量中读取数据库路径
 const dbPath = process.env.DB_PATH || path.join(__dirname, './data/future_mails.db');
 
+// 检查数据库文件是否存在
+const dbExists = fs.existsSync(dbPath);
+
 // 创建数据库连接
 const db = new sqlite3.Database(dbPath, (err) => {
     if (err) {
@@ -85,8 +88,12 @@ const createTables = () => {
 // 执行数据库初始化
 const initDatabase = async () => {
     try {
-        await createTables();
-        console.log('Database tables created successfully');
+        if (!dbExists) {
+            await createTables();
+            console.log('Database tables created successfully');
+        } else {
+            console.log('Database already exists, skipping table creation');
+        }
         
         // 清理过期的速率限制记录
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

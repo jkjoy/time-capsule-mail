@@ -9,7 +9,7 @@ const config = require('./config');
 const { DateTime } = require('luxon');
 
 const app = express();
-const db = new sqlite3.Database(process.env.DB_PATH || 'future_mails.db');
+const db = new sqlite3.Database(process.env.DB_PATH || './data/future_mails.db');
 const port = process.env.PORT || 3000;
 
 // 时区处理工具函数
