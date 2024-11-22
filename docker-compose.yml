@@ -1,0 +1,13 @@
+services:
+  time-capsule-mail:
+    image: jkjoy/time-capsule-mail:latest
+    environment:
+      SMTP_HOST: "mail.cock.li"
+      SMTP_PORT: "465"
+      SMTP_SECURE: "true"
+      SMTP_USER: "usr@cock.li"
+      SMTP_PASS: "password"
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/data

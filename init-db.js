@@ -134,6 +134,22 @@ const createTables = () => {
     });
 };
 
+// 清理过期的速率限制记录
+const cleanRateLimits = () => {
+    return new Promise((resolve, reject) => {
+        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+        db.run('DELETE FROM rate_limits WHERE last_attempt < ?', thirtyDaysAgo.toISOString(), (err) => {
+            if (err) {
+                console.error('Error cleaning rate_limits table:', err);
+                reject(err);
+            } else {
+                console.log('Rate limits cleaned successfully');
+                resolve();
+            }
+        });
+    });
+};
+
 // 执行数据库初始化
 const initDatabase = async () => {
     try {
@@ -144,15 +160,7 @@ const initDatabase = async () => {
             console.log('Database already exists, skipping table creation');
         }
         
-        // 清理过期的速率限制记录
-        const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        db.run('DELETE FROM rate_limits WHERE last_attempt < ?', thirtyDaysAgo.toISOString(), (err) => {
-            if (err) {
-                console.error('Error cleaning rate_limits table:', err);
-            } else {
-                console.log('Rate limits cleaned successfully');
-            }
-        });
+        await cleanRateLimits();
         
         db.close((err) => {
             if (err) {
