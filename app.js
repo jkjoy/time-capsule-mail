@@ -12,6 +12,9 @@ const app = express();
 const db = new sqlite3.Database(process.env.DB_PATH || './data/future_mails.db');
 const port = process.env.PORT || 3000;
 
+// 启用 trust proxy 设置
+app.set('trust proxy', true);
+
 // 时区处理工具函数
 const timeUtils = {
     toUTC: (dateStr, timezone) => DateTime.fromISO(dateStr, { zone: timezone }).toUTC().toISO(),
@@ -58,16 +61,15 @@ const mailConfig = {
             `
         }),
         futureMail: (content, sendTime) => ({
-            subject: `时光邮局 - 您的邮件已送达 (${sendTime})`,
+            subject: `时光邮局 - 您的邮件已送达`,
             html: `
                 <div style="padding: 20px; background-color: #f5f5f5;">
-                    <h2 style="color: #333;">时光邮局 - 您有一封来自过去的信</h2>
-                    <p>您好,未来的自己</p>
+                    <h2 style="color: #333;">您有一封来自过去的信</h2>
                     <div style="background-color: #fff; padding: 20px; border: 1px solid #ddd;">
                         <p>${content}</p>
                     </div>
                     <div style="margin-top: 20px; padding-top: 20px; border-top: 1px solid #ddd;">
-                        <p style="color: #666; font-size: 12px;">这是一封来自于过去的邮件,委托我们在 ${sendTime} 发送给您,请勿直接回复。</p>
+                        <p style="color: #666; font-size: 12px;">这是您委托我在 ${sendTime} 发送给您,请勿直接回复。</p>
                     </div>
                 </div>
             `
