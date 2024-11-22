@@ -46,7 +46,14 @@ const createTables = () => {
                         cancelled_at DATETIME,          -- 新增取消时间字段
                         last_retry_at DATETIME          -- 新增上次重试时间字段
                     )
-                `);
+                `, (err) => {
+                    if (err) {
+                        console.error('Error creating future_mails table:', err);
+                        reject(err);
+                    } else {
+                        console.log('future_mails table created successfully');
+                    }
+                });
 
                 // 创建发送日志表
                 db.run(`
@@ -58,7 +65,14 @@ const createTables = () => {
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
                         FOREIGN KEY(mail_id) REFERENCES future_mails(id) ON DELETE CASCADE
                     )
-                `);
+                `, (err) => {
+                    if (err) {
+                        console.error('Error creating mail_logs table:', err);
+                        reject(err);
+                    } else {
+                        console.log('mail_logs table created successfully');
+                    }
+                });
 
                 // 创建IP限制表
                 db.run(`
@@ -69,13 +83,48 @@ const createTables = () => {
                         blocked_until DATETIME,         -- 新增封禁时间字段
                         created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                     )
-                `);
+                `, (err) => {
+                    if (err) {
+                        console.error('Error creating rate_limits table:', err);
+                        reject(err);
+                    } else {
+                        console.log('rate_limits table created successfully');
+                    }
+                });
                 
                 // 创建索引
-                db.run(`CREATE INDEX IF NOT EXISTS idx_future_mails_send_time ON future_mails(send_time)`);
-                db.run(`CREATE INDEX IF NOT EXISTS idx_future_mails_email ON future_mails(email)`);
-                db.run(`CREATE INDEX IF NOT EXISTS idx_mail_logs_mail_id ON mail_logs(mail_id)`);
-                db.run(`CREATE INDEX IF NOT EXISTS idx_rate_limits_last_attempt ON rate_limits(last_attempt)`);
+                db.run(`CREATE INDEX IF NOT EXISTS idx_future_mails_send_time ON future_mails(send_time)`, (err) => {
+                    if (err) {
+                        console.error('Error creating idx_future_mails_send_time index:', err);
+                        reject(err);
+                    } else {
+                        console.log('idx_future_mails_send_time index created successfully');
+                    }
+                });
+                db.run(`CREATE INDEX IF NOT EXISTS idx_future_mails_email ON future_mails(email)`, (err) => {
+                    if (err) {
+                        console.error('Error creating idx_future_mails_email index:', err);
+                        reject(err);
+                    } else {
+                        console.log('idx_future_mails_email index created successfully');
+                    }
+                });
+                db.run(`CREATE INDEX IF NOT EXISTS idx_mail_logs_mail_id ON mail_logs(mail_id)`, (err) => {
+                    if (err) {
+                        console.error('Error creating idx_mail_logs_mail_id index:', err);
+                        reject(err);
+                    } else {
+                        console.log('idx_mail_logs_mail_id index created successfully');
+                    }
+                });
+                db.run(`CREATE INDEX IF NOT EXISTS idx_rate_limits_last_attempt ON rate_limits(last_attempt)`, (err) => {
+                    if (err) {
+                        console.error('Error creating idx_rate_limits_last_attempt index:', err);
+                        reject(err);
+                    } else {
+                        console.log('idx_rate_limits_last_attempt index created successfully');
+                    }
+                });
 
                 resolve();
             } catch (err) {
@@ -97,7 +146,13 @@ const initDatabase = async () => {
         
         // 清理过期的速率限制记录
         const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
-        db.run('DELETE FROM rate_limits WHERE last_attempt < ?', thirtyDaysAgo.toISOString());
+        db.run('DELETE FROM rate_limits WHERE last_attempt < ?', thirtyDaysAgo.toISOString(), (err) => {
+            if (err) {
+                console.error('Error cleaning rate_limits table:', err);
+            } else {
+                console.log('Rate limits cleaned successfully');
+            }
+        });
         
         db.close((err) => {
             if (err) {
@@ -112,8 +167,5 @@ const initDatabase = async () => {
     }
 };
 
-// 确保在使用数据库之前，环境变量已经加载
-require('dotenv').config();
-
-// 执行数据库初始化
-initDatabase();
+// 导出初始化函数
+module.exports = initDatabase;

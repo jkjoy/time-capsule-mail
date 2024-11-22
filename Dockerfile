@@ -15,6 +15,7 @@ COPY public ./public
 COPY app.js ./
 COPY init-db.js ./
 COPY config.js ./
+COPY start.js ./
 
 # 暴露端口
 EXPOSE 3000
@@ -22,8 +23,5 @@ EXPOSE 3000
 # 设置环境变量
 ENV NODE_ENV=production
 
-# 初始化数据库
-RUN node init-db.js
-
 # 启动应用程序
-CMD ["node", "app.js"]
+CMD ["node", "start.js"]
